@@ -2,12 +2,12 @@
 
 | | |
 |---|---|
-| **Version** | 1.0 (brouillon) |
+| **Version** | 1.0 |
 | **Ticket** | VC-10 |
 | **Producteur** | Simulateur de bornes (`simulator/`) — serveur central OCPP qui republie sur MQTT |
 | **Consommateur** | Passerelle MQTT → Salesforce (`gateway/`) |
 | **Broker** | Mosquitto |
-| **Statut** | À valider en équipe |
+| **Statut** | Validé par l'équipe |
 
 ---
 
@@ -200,7 +200,7 @@ Uniquement l'enveloppe commune (§4). Si la passerelle ne reçoit aucun heartbea
 | `Unavailable` | Désactivée (maintenance) | Hors service |
 | `Faulted` | En panne | Hors service |
 
-La passerelle transmet la **valeur OCPP brute** ; la conversion vers les 3 statuts Salesforce est faite **dans Salesforce** (à confirmer dans le contrat Platform Event).
+La passerelle transmet la **valeur OCPP brute** ; la conversion vers les 3 statuts Salesforce est faite **dans Salesforce** (décision d'équipe).
 
 ### 6.2 `code_erreur`
 
@@ -236,16 +236,17 @@ Valeurs OCPP 1.6 utilisées par le simulateur :
 - Deux comptes Mosquitto : `simulateur` (publication sur `voltcare/bornes/#`) et `passerelle` (lecture sur `voltcare/bornes/#`, publication sur `voltcare/erreurs`).
 - Identifiants dans un fichier `.env`, **jamais** dans le code ni sur GitHub.
 
-## 9. Points à trancher en équipe
+## 9. Décisions d'équipe
 
-- [ ] Nombre de bornes simulées : 10, 15 ou 20 ?
-- [ ] Fréquence des mesures : 30 s convient-il ?
-- [ ] Répartition des bornes entre les villes (ex. 8 MRK, 6 CAS, 6 RBT) ?
-- [ ] La conversion OCPP → statut Salesforce se fait-elle dans Salesforce (proposé) ou dans la passerelle ?
-- [ ] Faut-il un topic de commande Salesforce → borne (ex. remettre une borne en service après réparation) ? Proposé : **non** pour la version 1.0.
+- [x] Nombre de bornes simulées : **15**
+- [x] Fréquence des mesures : **30 s**
+- [x] Répartition : **5 Marrakech, 5 Casablanca, 5 Rabat**, soit les codes `MRK-001` à `MRK-005`, `CAS-001` à `CAS-005`, `RBT-001` à `RBT-005`
+- [x] Conversion OCPP → statut Salesforce : **dans Salesforce**
+- [x] Pas de topic de commande Salesforce → borne en version 1.0. La remise en service après réparation se fait **manuellement dans le simulateur** (commande `reparer {code_borne}`, qui publie un `status` à `Available` / `NoError`). Un topic `voltcare/bornes/{code}/commande` (OCPP `ChangeAvailability`) reste une amélioration possible en semaine 9.
 
 ## Historique
 
 | Version | Date | Modification |
 |---|---|---|
 | 1.0 | 15/10/2026 | Premier jet |
+| 1.0 | 15/10/2026 | Décisions d'équipe : 15 bornes, 30 s, 5/5/5, conversion dans Salesforce, pas de commande retour (réparation manuelle dans le simulateur) |
