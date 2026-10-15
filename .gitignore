@@ -1,0 +1,16 @@
+# Secrets
+.env
+*.key
+
+# Python
+__pycache__/
+.venv/
+*.pyc
+
+# Salesforce (config locale de chaque membre)
+.sf/
+.sfdx/
+
+# Divers
+node_modules/
+.DS_Store
