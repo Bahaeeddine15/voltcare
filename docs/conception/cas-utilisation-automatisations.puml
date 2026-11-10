@@ -1,0 +1,43 @@
+@startuml cas-utilisation-automatisations
+' VoltCare — Cas d'utilisation (2/2) : intégrations et automatisations — v1.0
+!include _style.iuml
+left to right direction
+title VoltCare — Cas d'utilisation (2/2) : intégrations et automatisations
+
+actor "Borne simulée\n(OCPP via MQTT)" as Borne <<système>>
+actor "Planificateur\n(toutes les heures)" as Temps <<système>>
+actor "Client\nconducteur" as Client
+
+rectangle "VoltCare — Salesforce" {
+  usecase "Remonter l'état, les sessions\net les mesures (BF-03)" as UC_Remonter
+  usecase "Prédire le risque\nde panne (BF-04)" as UC_Predire
+  usecase "Signaler un problème\nsur une borne (BF-08)" as UC_Signal
+  usecase "Créer et affecter un ticket\nau technicien du secteur (BF-05)" as UC_Ticket <<auto>>
+  usecase "Notifier le technicien\net le responsable (BF-09)" as UC_Notif <<auto>>
+}
+
+actor "Service IA\n(FastAPI, Azure)" as IA <<système>>
+actor "Bot Telegram" as TG <<système>>
+actor "Technicien" as Tech
+actor "Responsable\nréseau" as Resp
+
+Borne --> UC_Remonter
+Temps --> UC_Predire
+Client --> UC_Signal
+
+UC_Ticket .up.> UC_Remonter : <<extend>>\n[statut Faulted]
+UC_Ticket .up.> UC_Predire : <<extend>>\n[score > 70,\naucun ticket ouvert]
+UC_Ticket .up.> UC_Signal : <<extend>>
+UC_Ticket ..> UC_Notif : <<include>>
+
+UC_Predire --> IA
+UC_Notif --> TG
+TG --> Tech
+TG --> Resp
+
+legend right
+  Orange : déclenché automatiquement par le système
+  <<extend>> : seulement si la condition est vraie
+  <<include>> : toujours exécuté
+endlegend
+@enduml

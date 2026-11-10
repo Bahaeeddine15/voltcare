@@ -1,0 +1,66 @@
+@startuml cas-utilisation-acteurs
+' VoltCare — Cas d'utilisation (1/2) : acteurs humains — v1.0
+!include _style.iuml
+left to right direction
+title VoltCare — Cas d'utilisation (1/2) : acteurs humains
+
+actor "Client\nconducteur" as Client
+actor "Technicien" as Tech
+actor "Responsable\nréseau" as Resp
+actor "Administrateur" as Admin
+
+rectangle "VoltCare — Salesforce" {
+  package "Portail client (Experience Cloud)" {
+    usecase "Trouver une borne disponible\nsur la carte (BF-08)" as UC_Carte
+    usecase "Consulter l'historique\nde ses recharges (BF-08)" as UC_Histo
+    usecase "Signaler un problème\nsur une borne (BF-08)" as UC_Signal
+    usecase "S'authentifier\nsur le portail" as UC_Auth
+    usecase "Payer une session\n(Stripe, mode test) (BF-10)" as UC_Pay <<bonus>>
+  }
+  package "Maintenance (app mobile Salesforce)" {
+    usecase "Consulter et mettre à jour\nses tickets (BF-06)" as UC_MAJ
+    usecase "Clôturer l'intervention\n(BF-06)" as UC_Cloture
+    usecase "Remettre la borne\nen service (BF-06)" as UC_Remise <<auto>>
+    usecase "Obtenir un résumé IA de la\nborne (Agentforce) (BF-11)" as UC_Agent <<bonus>>
+  }
+  package "Pilotage (Lightning)" {
+    usecase "Consulter le tableau\nde bord (BF-07)" as UC_Dash
+    usecase "Suivre l'état et le risque\nd'une borne" as UC_Fiche
+    usecase "Réaffecter un ticket\nà un technicien" as UC_Reaff
+  }
+  package "Administration (Setup)" {
+    usecase "Gérer les profils et\nPermission Sets" as UC_Profils
+    usecase "Paramétrer stations,\nbornes et techniciens" as UC_Param
+    usecase "Configurer les intégrations\n(Connected App, Named Credentials)" as UC_Integ
+    usecase "Consulter le journal\nd'intégration" as UC_Log
+  }
+}
+
+Client --> UC_Carte
+Client --> UC_Histo
+Client --> UC_Signal
+UC_Histo ..> UC_Auth : <<include>>
+UC_Signal ..> UC_Auth : <<include>>
+UC_Pay ..> UC_Histo : <<extend>>
+
+Tech --> UC_MAJ
+Tech --> UC_Cloture
+Tech --> UC_Agent
+UC_Cloture ..> UC_Remise : <<include>>
+
+Resp --> UC_Dash
+Resp --> UC_Fiche
+Resp --> UC_Reaff
+
+Admin --> UC_Profils
+Admin --> UC_Param
+Admin --> UC_Integ
+Admin --> UC_Log
+
+legend right
+  Orange : action déclenchée automatiquement
+  Gris : bonus (BF-10, BF-11)
+  La création automatique des tickets
+  est détaillée dans le diagramme 2/2
+endlegend
+@enduml
