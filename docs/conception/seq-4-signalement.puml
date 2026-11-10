@@ -9,6 +9,7 @@ box "Salesforce — Experience Cloud" #E3F2FD
   participant "Contrôleur Apex\nSignalementController" as CTRL
   database "Case" as CASE
   participant "Flow\nAffectation" as AFF
+  participant "Notification_Ticket__e\n(abonné exécuté\nen tant qu'admin)" as NE
   participant "Queueable\nNotificationTelegram" as Q
   participant "Alerte email\n(Flow)" as MAIL
 end box
@@ -27,7 +28,9 @@ CTRL -> CASE : rattacher la photo (ContentVersion)
 CTRL --> LWC : numéro du ticket
 LWC --> CLI : « Signalement 00001020 envoyé »
 
-CASE -> Q : after insert → notification Telegram\n(comme la séquence 2)
+CASE -> NE : after insert → EventBus.publish(…)
+note right of NE : le client n'a jamais accès\naux secrets Telegram
+NE -> Q : System.enqueueJob(…)\n(comme la séquence 2)
 Q -> TECH : alerte « Signalement client sur MRK-001 »
 opt Notifier_Client~__c = vrai
   CASE -> MAIL : email « Votre signalement a bien été reçu »

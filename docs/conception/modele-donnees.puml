@@ -137,6 +137,12 @@ class "Borne_Event__e" as Event <<PlatformEvent>> {
   -- non stocké : traité par le trigger --
 }
 
+class "Notification_Ticket__e" as Notif <<PlatformEvent>> {
+  {field} Case_Id__c : Text(18)
+  {field} Type_Notification__c : Text(20)
+  -- abonné exécuté en tant qu'admin --
+}
+
 Station "1" *-- "1..*" Borne : contient >
 Borne "1" *-- "0..*" Session : a >
 Borne "1" *-- "0..*" Mesure : a >
@@ -149,6 +155,7 @@ Event ..> Borne : met à jour\n(via Code_Borne__c)
 Event ..> Session : crée / complète\n(via Cle_Session__c)
 Event ..> Mesure : crée\n(via Message_Id__c)
 Event ..> Log : erreurs
+Case ..> Notif : publié à la création
 
 legend right
   <b>Légende</b>
