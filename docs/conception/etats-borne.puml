@@ -1,0 +1,62 @@
+@startuml etats-borne
+' VoltCare — Diagramme d'états de Borne__c — v1.0
+!include _style-etats.iuml
+title Diagramme d'états — Borne__c (3 dimensions indépendantes)
+
+[*] --> Borne : événement BOOT\n(création par upsert)
+
+state "Borne__c" as Borne {
+
+  state "Statut__c" as S {
+    state "Disponible" as Dispo #EBF7E6
+    state "En charge" as Charge #E5F2FC
+    state "Hors service" as HS #FEDED8
+    HS : entry / créer un Case Panne\nsi aucun ticket ouvert (BF-05)
+
+    [*] --> Dispo
+    Dispo --> Charge : STATUT Preparing / Charging
+    Charge --> Dispo : STATUT Available\n(fin de session)
+    Dispo --> HS : STATUT Faulted / Unavailable
+    Charge --> HS : STATUT Faulted / Unavailable
+    HS --> Dispo : STATUT Available (après « reparer »)\nou clôture du Case Panne (BF-06)
+  }
+  --
+  state "Joignable__c" as J {
+    state "Joignable" as Oui
+    state "Injoignable" as Non #F3F3F3
+    Non : statut conservé, pas de ticket
+
+    [*] --> Oui
+    Oui --> Non : INJOIGNABLE\n(aucun heartbeat pendant 3 min)
+    Non --> Oui : JOIGNABLE\nou tout autre événement
+  }
+  --
+  state "Niveau_Risque__c" as R {
+    state "Indéterminé" as Ind #F3F3F3
+    state "Faible" as Fai
+    state "Moyen" as Moy #FFF3D6
+    state "Élevé" as Ele #FEDED8
+    Ele : entry / créer un Case Maintenance\npréventive si aucun ticket ouvert
+
+    [*] --> Ind
+    Ind --> Fai : score < 40
+    Ind --> Moy : 40 ≤ score ≤ 70
+    Ind --> Ele : score > 70
+    Fai --> Moy : 40 ≤ score ≤ 70
+    Fai --> Ele : score > 70
+    Moy --> Fai : score < 40
+    Moy --> Ele : score > 70
+    Ele --> Moy : 40 ≤ score ≤ 70
+    Ele --> Fai : score < 40
+    note bottom of Ind : depuis n'importe quel niveau :\nmoins de 6 mesures sur 24 h → Indéterminé
+  }
+}
+
+note bottom of Borne
+  Les trois dimensions évoluent indépendamment.
+  Statut : à chaque événement STATUT (séquence 1).
+  Joignable : selon les heartbeats surveillés par la passerelle.
+  Risque : à chaque calcul de l'IA, toutes les heures (séquence 3).
+  Un STATUT plus ancien que Date_Dernier_Statut__c est ignoré.
+end note
+@enduml

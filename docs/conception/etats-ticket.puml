@@ -1,0 +1,31 @@
+@startuml etats-ticket
+' VoltCare — Diagramme d'états de Case (ticket de maintenance) — v1.0
+!include _style-etats.iuml
+title Diagramme d'états — Case (ticket de maintenance)
+
+state "Nouveau" as New #E5F2FC
+New : entry / affecter au technicien du secteur\n(Flow Affectation)
+New : entry / notifier par Telegram (BF-09)
+New : entry / email au client si Notifier_Client__c
+
+state "En cours" as Work #FFF3D6
+Work : le technicien intervient (BF-06)
+
+state "Clôturé" as Closed #EBF7E6
+Closed : entry / si Type = Panne :\nBorne~__c.Statut~__c = Disponible (BF-06)
+Closed : entry / email « problème résolu »\nsi Notifier_Client__c
+
+[*] --> New : borne Faulted (Panne)\nscore > 70 (Maintenance préventive)\nportail (Signalement)
+New --> Work : le technicien prend en charge
+New --> New : le responsable réaffecte\n(nouvelle notification)
+Work --> Closed : le technicien clôture\nl'intervention
+New --> Closed : doublon ou\nfausse alerte
+Closed --> [*]
+
+note right of New
+  Un seul ticket ouvert par borne :
+  une nouvelle panne ou un nouveau score
+  élevé sur une borne qui a déjà un ticket
+  ouvert ne crée pas de deuxième ticket.
+end note
+@enduml

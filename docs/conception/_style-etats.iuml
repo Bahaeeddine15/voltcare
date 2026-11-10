@@ -1,0 +1,14 @@
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam ArrowColor #333333
+skinparam state {
+  BackgroundColor #FFFFFF
+  BorderColor #1E88E5
+  FontStyle bold
+  AttributeFontStyle normal
+}
+skinparam note {
+  BorderColor #FB8C00
+  BackgroundColor #FFF8E1
+}
