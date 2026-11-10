@@ -8,7 +8,9 @@ box "Salesforce" #E3F2FD
   participant "Flow\nTicket de panne" as FLOW
   participant "Flow\nAffectation\n(avant enregistrement)" as AFF
   database "Case" as CASE
-  participant "Trigger Case\n+ Queueable\nNotificationTelegram" as Q
+  participant "Trigger Case" as TC
+  participant "Notification_Ticket__e\n(abonné exécuté\nen tant qu'admin)" as NE
+  participant "Queueable\nNotificationTelegram" as Q
   participant "Named Credential\nTelegram" as NC
   database "Integration_Log__c" as LOG
 end box
@@ -25,7 +27,10 @@ else aucun ticket ouvert
   FLOW -> CASE : INSERT Case (Type=Panne, Origin=Borne,\nPriority=Haute, Borne~__c, Code_Erreur~__c)
   CASE -> AFF : avant enregistrement
   AFF -> AFF : OwnerId = Borne~__r.Station~__r.Technicien~__c
-  CASE -> Q : after insert → System.enqueueJob(…)
+  CASE -> TC : after insert
+  TC -> NE : EventBus.publish(Notification_Ticket~__e)
+  note right of NE : l'abonné s'exécute en tant qu'administrateur\n(PlatformEventSubscriberConfig) : seul lui a\naccès aux secrets Telegram (securite.md §7)
+  NE -> Q : System.enqueueJob(…)
   note right of Q : un trigger ne peut pas faire d'appel\nexterne : on passe par un Queueable
   Q -> NC : POST callout:Telegram/sendMessage\n(chat_id = Telegram_Chat_Id~__c du technicien\npuis du responsable)
   NC -> TG : requête HTTPS avec le jeton du bot

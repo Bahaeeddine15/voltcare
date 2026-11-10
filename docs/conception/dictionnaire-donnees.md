@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Version** | 1.1 |
+| **Version** | 1.2 |
 | **Sprint** | S2 — Conception |
 | **Diagramme** | `modele-donnees.puml` / `modele-donnees.png` |
 | **Contrats liés** | `contrat-mqtt.md`, `contrat-platform-event.md`, `contrat-api-ia.md` (v1.0) |
@@ -182,6 +182,15 @@ Colonne **Rempli par** : *Trigger* = trigger Apex sur `Borne_Event__e` · *IA* =
 
 Non stocké : il est consommé par le trigger. Ses champs sont définis dans `contrat-platform-event.md` v1.0, §3.
 
+## 10 bis. `Notification_Ticket__e` — Platform Event interne
+
+Publié par le trigger du `Case` à la création d'un ticket (et à sa réaffectation). Son abonné s'exécute **en tant que l'administrateur** (`PlatformEventSubscriberConfig`) et lance le Queueable Telegram : ainsi, ni les clients du portail ni les techniciens n'ont besoin d'accéder aux secrets Telegram (voir `securite.md` §7).
+
+| Champ API | Libellé | Type | Oblig. | Description |
+|---|---|---|:-:|---|
+| `Case_Id__c` | Ticket | Text(18) | ✔ | Id du `Case` à notifier |
+| `Type_Notification__c` | Type | Text(20) | ✔ | `CREATION` ou `REAFFECTATION` |
+
 ---
 
 ## 11. Estimation du stockage (Developer Edition : 5 Mo)
@@ -207,3 +216,4 @@ Chaque enregistrement compte pour environ 2 Ko.
 |---|---|---|
 | 1.0 | 10/11/2026 | Premier jet, décisions validées en équipe |
 | 1.1 | 10/11/2026 | Ajout de `Case.Notifier_Client__c` et des règles d'affectation et de clôture (issus des diagrammes de séquence) |
+| 1.2 | 10/11/2026 | Ajout du Platform Event `Notification_Ticket__e` (décision sécurité) |
