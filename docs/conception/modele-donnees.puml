@@ -103,6 +103,7 @@ class "Case (ticket)" as Case <<Standard>> {
   {field} Score_Risque_Creation__c : Number(3,0)
   {field} Type_Probleme_Client__c : Picklist
   {field} Duree_Reparation_Heures__c : Formula(Number)
+  {field} Notifier_Client__c : Checkbox
 }
 
 class "Contact (client)" as Contact <<Standard>> {

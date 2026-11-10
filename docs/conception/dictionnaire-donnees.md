@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Sprint** | S2 — Conception |
 | **Diagramme** | `modele-donnees.puml` / `modele-donnees.png` |
 | **Contrats liés** | `contrat-mqtt.md`, `contrat-platform-event.md`, `contrat-api-ia.md` (v1.0) |
@@ -136,8 +136,11 @@ Colonne **Rempli par** : *Trigger* = trigger Apex sur `Borne_Event__e` · *IA* =
 | `Score_Risque_Creation__c` | Score à la création | Number(3,0) | | Flow | Pour un ticket préventif |
 | `Type_Probleme_Client__c` | Type de problème | Picklist : La recharge ne démarre pas, La recharge s'est arrêtée, Câble ou prise endommagé, Écran ou badge, Autre | | Portail | |
 | `Duree_Reparation_Heures__c` | Délai de réparation (h) | Formule Number : `(ClosedDate − CreatedDate) × 24` | | Système | Indicateur du tableau de bord (BF-07) |
+| `Notifier_Client__c` | Prévenir le client par email | Checkbox, faux par défaut | | Portail | Case « Me prévenir par email de l'avancement » du formulaire de signalement |
 
-**Règle** : à la clôture d'un ticket de type Panne, la borne repasse **Disponible** (BF-06).
+**Règles**
+- **Affectation** : un Flow avant enregistrement, commun aux 3 origines, renseigne `OwnerId = Borne__r.Station__r.Technicien__c`.
+- **Clôture** : à la clôture d'un ticket de type Panne, la borne repasse **Disponible** et `Date_Dernier_Statut__c` reçoit l'heure de clôture (BF-06).
 
 ---
 
@@ -202,4 +205,5 @@ Chaque enregistrement compte pour environ 2 Ko.
 
 | Version | Date | Modification |
 |---|---|---|
-| 1.0 | 10/11/2026 | Premier jet |
+| 1.0 | 10/11/2026 | Premier jet, décisions validées en équipe |
+| 1.1 | 10/11/2026 | Ajout de `Case.Notifier_Client__c` et des règles d'affectation et de clôture (issus des diagrammes de séquence) |
