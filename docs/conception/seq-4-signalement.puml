@@ -1,44 +1,72 @@
 @startuml seq-4-signalement
-' VoltCare — Séquence 4 : signalement d'un problème par un client (BF-08, BF-05) — v1.0
+' VoltCare — Séquence 4 : signalement d'un problème par un client, avec tri anti-abus (BF-08, BF-05) — v1.1
 !include _style-seq.iuml
-title Séquence 4 — Un client signale un problème depuis le portail (BF-08, BF-05)
+title Séquence 4 — Un client signale un problème depuis le portail, avec tri automatique (BF-08, BF-05)
 
 actor "Client\nconducteur" as CLI
 box "Salesforce — Experience Cloud" #E3F2FD
   participant "Portail\n(LWC signalement)" as LWC
   participant "Contrôleur Apex\nSignalementController" as CTRL
+  database "Borne__c\nSession_Recharge__c\nContact" as DATA
   database "Case" as CASE
   participant "Flow\nAffectation" as AFF
   participant "Notification_Ticket__e\n(abonné exécuté\nen tant qu'admin)" as NE
-  participant "Queueable\nNotificationTelegram" as Q
   participant "Alerte email\n(Flow)" as MAIL
 end box
 actor "Technicien" as TECH
+actor "Responsable\nréseau" as RESP
 
 CLI -> LWC : se connecte puis ouvre\n« Signaler un problème »
 LWC -> CTRL : getBornes() (@AuraEnabled)
 CTRL --> LWC : liste des bornes (code, station, statut)
 CLI -> LWC : choisit la borne, le type de problème,\nla description, une photo, « me prévenir par email »
 LWC -> CTRL : creerSignalement(borneId, type,\ndescription, photo, notifier)
-CTRL -> CTRL : vérifier les champs obligatoires
-CTRL -> CASE : INSERT Case (Type=Signalement, Origin=Portail client,\nPriority=Moyenne, ContactId = contact du client,\nBorne~__c, Type_Probleme_Client~__c, Notifier_Client~__c)
-CASE -> AFF : avant enregistrement
-AFF -> AFF : OwnerId = Borne~__r.Station~__r.Technicien~__c
-CTRL -> CASE : rattacher la photo (ContentVersion)
-CTRL --> LWC : numéro du ticket
-LWC --> CLI : « Signalement 00001020 envoyé »
 
-CASE -> NE : after insert → EventBus.publish(…)
-note right of NE : le client n'a jamais accès\naux secrets Telegram
-NE -> Q : System.enqueueJob(…)\n(comme la séquence 2)
-Q -> TECH : alerte « Signalement client sur MRK-001 »
-opt Notifier_Client~__c = vrai
+== Tri automatique ==
+CTRL -> CASE : la borne a-t-elle déjà un ticket ouvert ?
+alt ticket déjà ouvert
+  CTRL -> CASE : ajouter le signalement en commentaire\ndu ticket existant
+  CTRL --> LWC : « Problème déjà connu,\nun technicien est prévenu »
+else aucun ticket ouvert
+  CTRL -> CASE : signalements du client sur 24 h,\nsignalement ouvert sur cette borne ?
+  alt plus de 3 sur 24 h ou déjà un signalement ouvert sur la borne
+    CTRL --> LWC : refus avec un message explicatif
+  else limites respectées
+    CTRL -> DATA : session du client sur cette borne (24 h) ?\ncode d'erreur récent ? injoignable ?\nniveau de risque ? Client_A_Verifier~__c ?
+    alt signalement crédible
+      CTRL -> CASE : INSERT Case (Type=Signalement, Origin=Portail client,\nStatus=Nouveau, Priority=Moyenne, ContactId, Borne~__c,\nType_Probleme_Client~__c, Notifier_Client~__c)
+      CASE -> AFF : avant enregistrement
+      AFF -> AFF : OwnerId = technicien du secteur
+      CASE -> NE : after insert → publish (CREATION)
+      NE -> TECH : alerte Telegram « Signalement client sur MRK-001 »
+    else rien ne confirme le problème
+      CTRL -> CASE : INSERT Case (… Status=À qualifier, Priority=Basse,\nOwnerId = file « Qualification des signalements »)
+      CASE -> NE : after insert → publish (QUALIFICATION)
+      NE -> RESP : alerte Telegram « Signalement à qualifier »
+    end
+    CTRL -> CASE : rattacher la photo (ContentVersion)
+    CTRL --> LWC : numéro du ticket
+  end
+end
+LWC --> CLI : « Merci, votre signalement\na été enregistré » (sans révéler le tri)
+opt nouveau ticket et Notifier_Client~__c = vrai
   CASE -> MAIL : email « Votre signalement a bien été reçu »
   MAIL -> CLI : email
 end
 
-== Plus tard ==
-TECH -> CASE : Status = Clôturé
+== Plus tard : qualification par le responsable (si À qualifier) ==
+alt le responsable confirme
+  RESP -> CASE : Status = Nouveau
+  CASE -> AFF : affecter au technicien du secteur
+  CASE -> NE : publish (REAFFECTATION)
+  NE -> TECH : alerte Telegram
+else le responsable rejette
+  RESP -> CASE : Status = Clôturé, Resolution = Non reproduit
+  CASE -> DATA : Nb_Signalements_Non_Fondes~__c + 1
+end
+
+== Clôture par le technicien ==
+TECH -> CASE : Status = Clôturé, Resolution = Réparé
 opt Notifier_Client~__c = vrai
   CASE -> MAIL : email « Le problème est résolu »
   MAIL -> CLI : email

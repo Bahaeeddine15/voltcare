@@ -27,6 +27,7 @@ rectangle "VoltCare — Salesforce" {
     usecase "Consulter le tableau\nde bord (BF-07)" as UC_Dash
     usecase "Suivre l'état et le risque\nd'une borne" as UC_Fiche
     usecase "Réaffecter un ticket\nà un technicien" as UC_Reaff
+    usecase "Qualifier un signalement\nnon confirmé" as UC_Qualif
   }
   package "Administration (Setup)" {
     usecase "Gérer les profils et\nPermission Sets" as UC_Profils
@@ -51,6 +52,7 @@ UC_Cloture ..> UC_Remise : <<include>>
 Resp --> UC_Dash
 Resp --> UC_Fiche
 Resp --> UC_Reaff
+Resp --> UC_Qualif
 
 Admin --> UC_Profils
 Admin --> UC_Param

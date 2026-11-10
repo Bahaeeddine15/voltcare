@@ -27,7 +27,7 @@ Client --> UC_Signal
 
 UC_Ticket .up.> UC_Remonter : <<extend>>\n[statut Faulted]
 UC_Ticket .up.> UC_Predire : <<extend>>\n[score > 70,\naucun ticket ouvert]
-UC_Ticket .up.> UC_Signal : <<extend>>
+UC_Ticket .up.> UC_Signal : <<extend>>\n[signalement crédible\nou confirmé]
 UC_Ticket ..> UC_Notif : <<include>>
 
 UC_Predire --> IA

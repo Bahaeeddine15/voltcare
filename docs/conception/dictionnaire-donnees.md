@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Version** | 1.2 |
+| **Version** | 1.3 |
 | **Sprint** | S2 — Conception |
 | **Diagramme** | `modele-donnees.puml` / `modele-donnees.png` |
 | **Contrats liés** | `contrat-mqtt.md`, `contrat-platform-event.md`, `contrat-api-ia.md` (v1.0) |
@@ -121,9 +121,9 @@ Colonne **Rempli par** : *Trigger* = trigger Apex sur `Borne_Event__e` · *IA* =
 |---|---|
 | `Type` | **Panne** (borne `Faulted`) · **Maintenance préventive** (score > 70) · **Signalement** (portail client) |
 | `Origin` | **Borne** · **Prédiction IA** · **Portail client** |
-| `Status` | Nouveau → En cours → Clôturé |
-| `Priority` | Haute (panne), Moyenne (préventive, signalement) |
-| `OwnerId` | Le technicien du secteur (`Station__c.Technicien__c`) |
+| `Status` | **À qualifier** (signalement non confirmé) → Nouveau → En cours → Clôturé |
+| `Priority` | Haute (panne), Moyenne (préventive, signalement crédible), Basse (signalement à qualifier) |
+| `OwnerId` | Le technicien du secteur (`Station__c.Technicien__c`), ou la file d'attente **« Qualification des signalements »** (responsable) pour un ticket À qualifier |
 | `ContactId` | Le client, pour un signalement |
 | `Subject` / `Description` | Générés automatiquement ou saisis par le client |
 
@@ -137,9 +137,16 @@ Colonne **Rempli par** : *Trigger* = trigger Apex sur `Borne_Event__e` · *IA* =
 | `Type_Probleme_Client__c` | Type de problème | Picklist : La recharge ne démarre pas, La recharge s'est arrêtée, Câble ou prise endommagé, Écran ou badge, Autre | | Portail | |
 | `Duree_Reparation_Heures__c` | Délai de réparation (h) | Formule Number : `(ClosedDate − CreatedDate) × 24` | | Système | Indicateur du tableau de bord (BF-07) |
 | `Notifier_Client__c` | Prévenir le client par email | Checkbox, faux par défaut | | Portail | Case « Me prévenir par email de l'avancement » du formulaire de signalement |
+| `Resolution__c` | Résolution | Picklist : Réparé, Non reproduit, Doublon | ✔ à la clôture | Technicien / responsable | Obligatoire pour clôturer (règle de validation). « Non reproduit » sur un signalement compte comme signalement non fondé |
 
 **Règles**
-- **Affectation** : un Flow avant enregistrement, commun aux 3 origines, renseigne `OwnerId = Borne__r.Station__r.Technicien__c`.
+- **Affectation** : un Flow avant enregistrement, commun aux 3 origines, renseigne `OwnerId = Borne__r.Station__r.Technicien__c` quand le ticket est créé au statut Nouveau **ou** passe de « À qualifier » à « Nouveau ». Un ticket « À qualifier » va dans la file « Qualification des signalements ».
+- **Tri d'un signalement** (contrôleur `SignalementController`) :
+  1. La borne a déjà un ticket ouvert → pas de nouveau ticket : le signalement est ajouté en commentaire au ticket existant.
+  2. Limites : 3 signalements maximum par client sur 24 h, un seul signalement ouvert par client et par borne → sinon refus avec un message.
+  3. Le signalement est **crédible** si le client a une session sur cette borne dans les 24 dernières heures, **ou** si la borne a un code d'erreur autre que `NoError` depuis moins de 24 h, **ou** si elle est injoignable, **ou** si son niveau de risque est Moyen ou Élevé — **et** si le client n'est pas signalé comme peu fiable.
+  4. Crédible → statut **Nouveau**, priorité Moyenne, circuit normal. Sinon → statut **À qualifier**, priorité Basse, file du responsable, sans alerte au technicien.
+- **Signalement non fondé** : à la clôture d'un signalement avec la résolution « Non reproduit », `Contact.Nb_Signalements_Non_Fondes__c` augmente de 1.
 - **Clôture** : à la clôture d'un ticket de type Panne, la borne repasse **Disponible** et `Date_Dernier_Statut__c` reçoit l'heure de clôture (BF-06).
 
 ---
@@ -149,7 +156,9 @@ Colonne **Rempli par** : *Trigger* = trigger Apex sur `Borne_Event__e` · *IA* =
 | Champ API | Libellé | Type | Oblig. | Rempli par | Description |
 |---|---|---|:-:|---|---|
 | `AccountId` | Compte | Lookup(Account) | ✔ | Saisie | Toujours le compte « Clients VoltCare » |
-| `Badge_RFID__c` | Badge RFID | Text(20) · **External ID, unique** | | Saisie | Ex. `CLI-0042` — relie les sessions au client |
+| `Badge_RFID__c` | Badge RFID | Text(20) · **External ID, unique** | | Saisie (page « Mon compte ») | Ex. `CLI-0042` — relie les sessions au client |
+| `Nb_Signalements_Non_Fondes__c` | Signalements non fondés | Number(3,0), 0 par défaut | | Flow | Signalements clôturés avec la résolution « Non reproduit » |
+| `Client_A_Verifier__c` | Client à vérifier | Formule Checkbox : `Nb_Signalements_Non_Fondes__c >= 3` | | Système | Si vrai, tous ses signalements passent « À qualifier » |
 
 ---
 
@@ -189,7 +198,7 @@ Publié par le trigger du `Case` à la création d'un ticket (et à sa réaffect
 | Champ API | Libellé | Type | Oblig. | Description |
 |---|---|---|:-:|---|
 | `Case_Id__c` | Ticket | Text(18) | ✔ | Id du `Case` à notifier |
-| `Type_Notification__c` | Type | Text(20) | ✔ | `CREATION` ou `REAFFECTATION` |
+| `Type_Notification__c` | Type | Text(20) | ✔ | `CREATION`, `REAFFECTATION` ou `QUALIFICATION` (alerte au responsable seulement) |
 
 ---
 
@@ -217,3 +226,4 @@ Chaque enregistrement compte pour environ 2 Ko.
 | 1.0 | 10/11/2026 | Premier jet, décisions validées en équipe |
 | 1.1 | 10/11/2026 | Ajout de `Case.Notifier_Client__c` et des règles d'affectation et de clôture (issus des diagrammes de séquence) |
 | 1.2 | 10/11/2026 | Ajout du Platform Event `Notification_Ticket__e` (décision sécurité) |
+| 1.3 | 10/11/2026 | Anti-abus des signalements : statut « À qualifier », `Case.Resolution__c`, compteur de signalements non fondés sur le Contact, file de qualification |

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Version** | 1.0 — validée par l'équipe |
+| **Version** | 1.1 |
 | **Sprint** | S2 — Conception |
 | **Exigence** | Besoins non fonctionnels — Sécurité : profils et Permission Sets par acteur, Named Credentials, aucun secret dans le code, OAuth 2.0 pour la passerelle |
 | **Documents liés** | `dictionnaire-donnees.md` v1.1, contrats v1.0, diagrammes de séquence |
@@ -141,6 +141,12 @@ Avec les Named Credentials récents, **l'utilisateur qui exécute l'appel** doit
   - Prérequis : **Setup → Deliverability → All email**, sinon le code de vérification n'est pas envoyé.
   - Seule la page d'inscription est accessible sans connexion (utilisateur *guest*).
 - **Badge RFID** : un nouveau client saisit son numéro de badge sur une page « Mon compte » du portail, qui renseigne `Contact.Badge_RFID__c`. Tant qu'il ne l'a pas fait, ses recharges ne lui sont pas rattachées.
+- **Anti-abus des signalements** (détail dans le dictionnaire v1.3, §6) :
+  - chaque signalement est confronté à l'état réel de la borne : un signalement que rien ne confirme passe au statut **« À qualifier »** et va au responsable, sans déplacer de technicien ;
+  - 3 signalements maximum par client sur 24 h, un seul ouvert par client et par borne ;
+  - au-delà de 3 signalements « Non reproduit », le client est marqué **à vérifier** et ses signalements passent tous par le responsable, qui peut aussi désactiver le compte ;
+  - le message affiché au client ne révèle pas le résultat du tri (« Merci, votre signalement a été enregistré »).
+- **File d'attente « Qualification des signalements »** : le responsable en est le seul membre.
 - Le contrôleur de signalement vérifie que la borne choisie existe et renseigne lui-même `ContactId` à partir de l'utilisateur connecté : un client ne peut pas créer un ticket au nom d'un autre.
 
 ---
@@ -163,3 +169,4 @@ Avec les Named Credentials récents, **l'utilisateur qui exécute l'appel** doit
 | Version | Date | Modification |
 |---|---|---|
 | 1.0 | 10/11/2026 | Premier jet, décisions validées : connexion obligatoire avec inscription libre, contrôleur filtré, `Notification_Ticket__e` |
+| 1.1 | 10/11/2026 | Anti-abus des signalements |
