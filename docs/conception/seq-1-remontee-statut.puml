@@ -1,0 +1,64 @@
+@startuml seq-1-remontee-statut
+' VoltCare — Séquence 1 : remontée d'un statut de borne (BF-03) — v1.0
+!include _style-seq.iuml
+title Séquence 1 — Remontée d'un statut : la borne MRK-001 tombe en panne (BF-03)
+
+box "Simulation (Python)" #F1F8E9
+  participant "Borne simulée\nMRK-001" as B
+  participant "Serveur central\nOCPP (CSMS)" as CSMS
+end box
+box "Messagerie IoT" #FFF3E0
+  participant "Mosquitto" as MQ
+end box
+box "Passerelle (Python)" #FFFDE7
+  participant "Passerelle" as GW
+end box
+box "Salesforce" #E3F2FD
+  participant "OAuth\n/oauth2/token" as AUTH
+  participant "API REST\ncomposite/sobjects" as API
+  participant "Bus d'événements\nBorne_Event__e" as BUS
+  participant "Trigger Apex\nBorneEventTrigger" as TRG
+  database "Borne__c" as BOR
+  database "Integration_Log__c" as LOG
+end box
+
+B -> CSMS : StatusNotification\n(connectorId=1, status=Faulted,\nerrorCode=HighTemperature)\n[OCPP 1.6 / WebSocket]
+CSMS --> B : StatusNotification.conf
+CSMS -> MQ : PUBLISH voltcare/bornes/MRK-001/status\n(QoS 1, retain) — JSON du contrat MQTT §5.2
+MQ -> GW : message (abonnement voltcare/bornes/+/#)
+
+GW -> GW : valider le JSON\net ignorer un message_id déjà vu
+alt message invalide
+  GW -> MQ : PUBLISH voltcare/erreurs
+else message valide
+  GW -> GW : ajouter au tampon\n(Type~__c = STATUT)
+  note right of GW : le tampon est envoyé\ntoutes les 2 secondes
+
+  opt pas de jeton ou réponse 401
+    GW -> AUTH : POST grant_type=client_credentials\n(client_id, client_secret du .env)
+    AUTH --> GW : access_token
+  end
+
+  GW -> API : POST /composite/sobjects\n{allOrNone:false, records:[Borne_Event~__e …]}
+  API -> BUS : publier les événements
+  API --> GW : 200 [{success:true}]
+
+  alt erreur réseau ou 5xx
+    GW -> GW : 3 nouveaux essais (2 s, 4 s, 8 s)\npuis écriture dans gateway/echecs/
+  end
+
+  BUS -> TRG : after insert (lot d'événements)
+  TRG -> BOR : SELECT … WHERE Code_Borne~__c IN :codes
+  alt borne inconnue
+    TRG -> LOG : INSERT (Source=PASSERELLE, Niveau=ERREUR)
+  else Horodatage~__c < Date_Dernier_Statut~__c
+    TRG -> TRG : ignorer (événement arrivé en retard)
+  else cas normal
+    TRG -> TRG : convertir Faulted → « Hors service »\n(contrat Platform Event §6.3)
+    TRG -> BOR : UPDATE Statut~__c, Statut_OCPP~__c,\nDernier_Code_Erreur~__c, Date_Dernier_Statut~__c,\nJoignable~__c = vrai, Date_Dernier_Contact~__c
+    note right of BOR : le passage à « Hors service »\ndéclenche la séquence 2
+  end
+end
+
+note over B, BOR : Délai total visé : environ 5 s (exigence < 10 s)
+@enduml

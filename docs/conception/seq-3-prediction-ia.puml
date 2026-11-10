@@ -1,0 +1,51 @@
+@startuml seq-3-prediction-ia
+' VoltCare — Séquence 3 : prédiction du risque de panne (BF-04, BF-05) — v1.0
+!include _style-seq.iuml
+title Séquence 3 — Prédiction du risque de panne, toutes les heures (BF-04, BF-05)
+
+box "Salesforce" #E3F2FD
+  participant "Scheduled Apex\nPredictionScheduler\n(HH:05)" as SCH
+  participant "Queueable\nPredictionQueueable" as Q
+  database "Borne__c\nMesure_Borne__c\nSession_Recharge__c\nCase" as DATA
+  participant "Named Credential\nVoltCare_IA" as NC
+  database "Integration_Log__c" as LOG
+end box
+box "Azure App Service" #F3E5F5
+  participant "API IA\nFastAPI" as API
+  participant "Modèle\nscikit-learn" as ML
+end box
+
+SCH -> Q : System.enqueueJob(new PredictionQueueable())
+Q -> DATA : SELECT des 15 bornes, mesures sur 24 h,\nsessions sur 24 h, tickets sur 30 jours
+Q -> Q : calculer les 10 indicateurs par borne\n(définitions du contrat API IA §5.1)
+Q -> NC : POST callout:VoltCare_IA/v1/predict\n{date_calcul, bornes:[15 éléments]}\ndélai max 120 s
+NC -> API : requête HTTPS + en-tête X-API-Key
+API -> API : vérifier la clé et valider le JSON
+alt clé invalide
+  API --> Q : 401
+else requête invalide
+  API --> Q : 422
+else requête valide
+  loop pour chaque borne
+    alt nb_mesures_24h < 6
+      API -> API : score null, niveau INDETERMINE
+    else
+      API -> ML : predict_proba(indicateurs)
+      ML --> API : probabilité de panne
+      API -> API : score 0–100, niveau,\n1 à 3 facteurs principaux
+    end
+  end
+  API --> Q : 200 {version_modele, resultats:[…]}
+end
+
+alt réponse 200
+  Q -> DATA : UPDATE Borne~__c : Score_Risque~__c, Niveau_Risque~__c,\nFacteurs_Risque~__c, Date_Score~__c, Version_Modele~__c
+  opt score > 70 et aucun Case ouvert sur la borne
+    Q -> DATA : INSERT Case (Type=Maintenance préventive,\nOrigin=Prédiction IA, Score_Risque_Creation~__c)
+    note right of DATA : affectation et notification :\nmêmes étapes que la séquence 2
+  end
+else erreur ou délai dépassé
+  Q -> LOG : INSERT (Source=API_IA, Code_HTTP~__c, Message~__c)
+  note right of Q : les scores précédents sont conservés\net aucun ticket n'est créé
+end
+@enduml

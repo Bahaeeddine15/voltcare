@@ -1,0 +1,43 @@
+@startuml seq-4-signalement
+' VoltCare — Séquence 4 : signalement d'un problème par un client (BF-08, BF-05) — v1.0
+!include _style-seq.iuml
+title Séquence 4 — Un client signale un problème depuis le portail (BF-08, BF-05)
+
+actor "Client\nconducteur" as CLI
+box "Salesforce — Experience Cloud" #E3F2FD
+  participant "Portail\n(LWC signalement)" as LWC
+  participant "Contrôleur Apex\nSignalementController" as CTRL
+  database "Case" as CASE
+  participant "Flow\nAffectation" as AFF
+  participant "Queueable\nNotificationTelegram" as Q
+  participant "Alerte email\n(Flow)" as MAIL
+end box
+actor "Technicien" as TECH
+
+CLI -> LWC : se connecte puis ouvre\n« Signaler un problème »
+LWC -> CTRL : getBornes() (@AuraEnabled)
+CTRL --> LWC : liste des bornes (code, station, statut)
+CLI -> LWC : choisit la borne, le type de problème,\nla description, une photo, « me prévenir par email »
+LWC -> CTRL : creerSignalement(borneId, type,\ndescription, photo, notifier)
+CTRL -> CTRL : vérifier les champs obligatoires
+CTRL -> CASE : INSERT Case (Type=Signalement, Origin=Portail client,\nPriority=Moyenne, ContactId = contact du client,\nBorne~__c, Type_Probleme_Client~__c, Notifier_Client~__c)
+CASE -> AFF : avant enregistrement
+AFF -> AFF : OwnerId = Borne~__r.Station~__r.Technicien~__c
+CTRL -> CASE : rattacher la photo (ContentVersion)
+CTRL --> LWC : numéro du ticket
+LWC --> CLI : « Signalement 00001020 envoyé »
+
+CASE -> Q : after insert → notification Telegram\n(comme la séquence 2)
+Q -> TECH : alerte « Signalement client sur MRK-001 »
+opt Notifier_Client~__c = vrai
+  CASE -> MAIL : email « Votre signalement a bien été reçu »
+  MAIL -> CLI : email
+end
+
+== Plus tard ==
+TECH -> CASE : Status = Clôturé
+opt Notifier_Client~__c = vrai
+  CASE -> MAIL : email « Le problème est résolu »
+  MAIL -> CLI : email
+end
+@enduml

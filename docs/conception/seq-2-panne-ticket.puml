@@ -1,0 +1,48 @@
+@startuml seq-2-panne-ticket
+' VoltCare — Séquence 2 : panne, ticket et notification (BF-05, BF-06, BF-09) — v1.0
+!include _style-seq.iuml
+title Séquence 2 — Panne : création du ticket, notification et remise en service (BF-05, BF-06, BF-09)
+
+box "Salesforce" #E3F2FD
+  database "Borne__c" as BOR
+  participant "Flow\nTicket de panne" as FLOW
+  participant "Flow\nAffectation\n(avant enregistrement)" as AFF
+  database "Case" as CASE
+  participant "Trigger Case\n+ Queueable\nNotificationTelegram" as Q
+  participant "Named Credential\nTelegram" as NC
+  database "Integration_Log__c" as LOG
+end box
+participant "Bot API\nTelegram" as TG
+actor "Technicien\n(app mobile)" as TECH
+actor "Responsable\nréseau" as RESP
+participant "Simulateur\n(commande manuelle)" as SIM
+
+BOR -> FLOW : Statut~__c passe à « Hors service »
+FLOW -> CASE : existe-t-il un Case ouvert\nde type Panne pour cette borne ?
+alt un ticket est déjà ouvert
+  FLOW -> FLOW : ne rien créer
+else aucun ticket ouvert
+  FLOW -> CASE : INSERT Case (Type=Panne, Origin=Borne,\nPriority=Haute, Borne~__c, Code_Erreur~__c)
+  CASE -> AFF : avant enregistrement
+  AFF -> AFF : OwnerId = Borne~__r.Station~__r.Technicien~__c
+  CASE -> Q : after insert → System.enqueueJob(…)
+  note right of Q : un trigger ne peut pas faire d'appel\nexterne : on passe par un Queueable
+  Q -> NC : POST callout:Telegram/sendMessage\n(chat_id = Telegram_Chat_Id~__c du technicien\npuis du responsable)
+  NC -> TG : requête HTTPS avec le jeton du bot
+  TG --> Q : 200 OK
+  alt erreur Telegram
+    Q -> LOG : INSERT (Source=TELEGRAM, Niveau=ERREUR)
+  end
+  TG -> TECH : « Panne MRK-001 — HighTemperature — ticket 00001023 »
+  TG -> RESP : même alerte
+  CASE -> TECH : notification de l'app mobile Salesforce\n(ticket affecté)
+end
+
+== Intervention ==
+TECH -> CASE : Status = En cours
+TECH -> SIM : (démo) répare la borne :\n« reparer MRK-001 »
+note right of SIM : le statut Available remonte\npar la séquence 1
+TECH -> CASE : Status = Clôturé
+CASE -> BOR : Flow de clôture : Statut~__c = Disponible,\nDate_Dernier_Statut~__c = maintenant (BF-06)
+note right of BOR : la date mise à jour fait ignorer\nun ancien « Faulted » rejoué par le broker
+@enduml
