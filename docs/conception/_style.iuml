@@ -1,0 +1,20 @@
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam ArrowColor #444444
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #1E88E5
+}
+skinparam usecase<<bonus>> {
+  BorderColor #9E9E9E
+  FontColor #757575
+}
+skinparam usecase<<auto>> {
+  BackgroundColor #FFF3E0
+  BorderColor #FB8C00
+}
+skinparam package {
+  BorderColor #90A4AE
+  FontColor #37474F
+}
