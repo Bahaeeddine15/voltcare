@@ -1,0 +1,159 @@
+@startuml modele-donnees
+' VoltCare — Modèle de données Salesforce v1.0 (ticket S2 « Modèle de données »)
+' Conforme aux contrats MQTT, Platform Event et API IA v1.0
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam ArrowColor #333333
+skinparam class {
+  BorderColor #1E88E5
+  BackgroundColor #FFFFFF
+  HeaderBackgroundColor #E3F2FD
+}
+skinparam class<<Standard>> {
+  BorderColor #6D6D6D
+  HeaderBackgroundColor #EEEEEE
+}
+skinparam class<<PlatformEvent>> {
+  BorderColor #8E24AA
+  HeaderBackgroundColor #F3E5F5
+}
+skinparam class<<Journal>> {
+  BorderColor #78909C
+  HeaderBackgroundColor #ECEFF1
+}
+hide empty methods
+left to right direction
+
+title VoltCare — Modèle de données Salesforce (v1.0)
+
+class "Station__c" as Station {
+  {field} Name : Text(80)
+  {field} <b>Code_Station__c : Text(20)</b> «External ID, unique»
+  {field} Ville__c : Picklist (Marrakech, Casablanca, Rabat)
+  {field} Adresse__c : Text(255)
+  {field} Localisation__c : Geolocation
+  {field} Technicien__c : Lookup(User)
+  {field} Nb_Bornes__c : Roll-up COUNT(Borne__c)
+  {field} Nb_Bornes_Hors_Service__c : Roll-up COUNT(Borne__c)
+}
+
+class "Borne__c" as Borne {
+  {field} Name : Text(80) = code borne
+  {field} <b>Code_Borne__c : Text(20)</b> «External ID, unique»
+  {field} Station__c : Master-Detail(Station__c)
+  {field} Statut__c : Picklist (Disponible, En charge, Hors service)
+  {field} Statut_OCPP__c : Text(20)
+  {field} Dernier_Code_Erreur__c : Text(40)
+  {field} Date_Dernier_Statut__c : DateTime
+  {field} Joignable__c : Checkbox = vrai
+  {field} Date_Dernier_Contact__c : DateTime
+  {field} Fabricant__c / Modele__c : Text(40)
+  {field} Firmware__c : Text(20)
+  {field} Puissance_Max_kW__c : Number(5,1)
+  {field} Date_Mise_En_Service__c : Date
+  {field} Score_Risque__c : Number(3,0)
+  {field} Niveau_Risque__c : Picklist
+  {field} Facteurs_Risque__c : Text(255)
+  {field} Date_Score__c : DateTime
+  {field} Version_Modele__c : Text(40)
+  {field} Nb_Sessions__c : Roll-up COUNT
+  {field} Energie_Delivree_kWh__c : Roll-up SUM
+}
+
+class "Session_Recharge__c" as Session {
+  {field} Name : Auto Number SES-{000000}
+  {field} <b>Cle_Session__c : Text(40)</b> «External ID, unique»
+  {field} Borne__c : Master-Detail(Borne__c)
+  {field} Client__c : Lookup(Contact)
+  {field} Transaction_Id__c : Number(18,0)
+  {field} Id_Tag__c : Text(20)
+  {field} Date_Debut__c / Date_Fin__c : DateTime
+  {field} Compteur_Debut_Wh__c / Compteur_Fin_Wh__c : Number(18,0)
+  {field} Energie_kWh__c : Number(8,2)
+  {field} Duree_Minutes__c : Number(6,0)
+  {field} Statut__c : Picklist (En cours, Terminée, Interrompue)
+  {field} Raison_Arret__c : Text(20)
+}
+
+class "Mesure_Borne__c" as Mesure {
+  {field} Name : Auto Number MES-{000000}
+  {field} <b>Message_Id__c : Text(36)</b> «External ID, unique»
+  {field} Borne__c : Master-Detail(Borne__c)
+  {field} Periode_Debut__c / Periode_Fin__c : DateTime
+  {field} Nb_Mesures__c : Number(4,0)
+  {field} Energie_Wh__c : Number(18,0)
+  {field} Puissance_Moy_W__c : Number(8,1)
+  {field} Temperature_Moy_C__c : Number(4,1)
+  {field} Temperature_Max_C__c : Number(4,1)
+  {field} Tension_Moy_V__c : Number(5,1)
+  -- conservées 72 h --
+}
+
+class "Case (ticket)" as Case <<Standard>> {
+  {field} Type : Panne | Maintenance préventive | Signalement
+  {field} Origin : Borne | Prédiction IA | Portail client
+  {field} Status / Priority / OwnerId (technicien)
+  {field} ContactId (client qui signale)
+  ..champs ajoutés..
+  {field} Borne__c : Lookup(Borne__c)
+  {field} Code_Erreur__c : Text(40)
+  {field} Score_Risque_Creation__c : Number(3,0)
+  {field} Type_Probleme_Client__c : Picklist
+  {field} Duree_Reparation_Heures__c : Formula(Number)
+}
+
+class "Contact (client)" as Contact <<Standard>> {
+  {field} AccountId : compte « Clients VoltCare »
+  ..champ ajouté..
+  {field} <b>Badge_RFID__c : Text(20)</b> «External ID, unique»
+}
+
+class "User (technicien, responsable)" as User <<Standard>> {
+  ..champ ajouté..
+  {field} Telegram_Chat_Id__c : Text(30)
+}
+
+class "Integration_Log__c" as Log <<Journal>> {
+  {field} Name : Auto Number LOG-{000000}
+  {field} Source__c : Picklist (PASSERELLE, API_IA, TELEGRAM)
+  {field} Niveau__c : Picklist (INFO, ERREUR)
+  {field} Type_Evenement__c : Text(30)
+  {field} Code_Borne__c : Text(20)
+  {field} Code_HTTP__c : Number(3,0)
+  {field} Message__c : Long Text(5000)
+  {field} Contenu__c : Long Text(32768)
+  -- conservés 7 jours --
+}
+
+class "Borne_Event__e" as Event <<PlatformEvent>> {
+  {field} Type__c · Message_Id__c
+  {field} Code_Borne__c · Horodatage__c
+  {field} + champs par type (voir contrat
+  {field} Platform Event v1.0, §3)
+  -- non stocké : traité par le trigger --
+}
+
+Station "1" *-- "1..*" Borne : contient >
+Borne "1" *-- "0..*" Session : a >
+Borne "1" *-- "0..*" Mesure : a >
+Borne "1" o-- "0..*" Case : concerne <
+Contact "0..1" o-- "0..*" Session : effectue >
+Contact "0..1" o-- "0..*" Case : signale >
+User "0..1" o-- "0..*" Station : technicien du secteur <
+User "1" o-- "0..*" Case : traite >
+Event ..> Borne : met à jour\n(via Code_Borne__c)
+Event ..> Session : crée / complète\n(via Cle_Session__c)
+Event ..> Mesure : crée\n(via Message_Id__c)
+Event ..> Log : erreurs
+
+legend right
+  <b>Légende</b>
+  ◆ trait plein : Master-Detail (suppression en cascade, roll-ups)
+  ◇ trait plein : Lookup
+  - - > : traitement par le trigger Apex (pas une relation)
+  <b>Gras</b> : External ID utilisé pour les upserts
+endlegend
+@enduml
