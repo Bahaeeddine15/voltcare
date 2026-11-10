@@ -1,21 +1,31 @@
 @startuml etats-ticket
-' VoltCare — Diagramme d'états de Case (ticket de maintenance) — v1.0
+' VoltCare — Diagramme d'états de Case (ticket de maintenance) — v1.1
 !include _style-etats.iuml
 title Diagramme d'états — Case (ticket de maintenance)
+
+state "À qualifier" as Qual #F3F3F3
+Qual : signalement non confirmé par les données
+Qual : entry / file « Qualification des signalements »
+Qual : entry / alerte au responsable seulement
 
 state "Nouveau" as New #E5F2FC
 New : entry / affecter au technicien du secteur\n(Flow Affectation)
 New : entry / notifier par Telegram (BF-09)
-New : entry / email au client si Notifier_Client__c
+New : entry / email au client si Notifier_Client~__c
 
 state "En cours" as Work #FFF3D6
 Work : le technicien intervient (BF-06)
 
 state "Clôturé" as Closed #EBF7E6
+Closed : Resolution~__c obligatoire\n(Réparé, Non reproduit, Doublon)
 Closed : entry / si Type = Panne :\nBorne~__c.Statut~__c = Disponible (BF-06)
-Closed : entry / email « problème résolu »\nsi Notifier_Client__c
+Closed : entry / si signalement « Non reproduit » :\nNb_Signalements_Non_Fondes~__c + 1
+Closed : entry / email « problème résolu »\nsi Notifier_Client~__c
 
-[*] --> New : borne Faulted (Panne)\nscore > 70 (Maintenance préventive)\nportail (Signalement)
+[*] --> New : borne Faulted (Panne)\nscore > 70 (Maintenance préventive)\nsignalement crédible
+[*] --> Qual : signalement que rien\nne confirme
+Qual --> New : le responsable\ntransmet au technicien
+Qual --> Closed : le responsable clôture\n(Non reproduit)
 New --> Work : le technicien prend en charge
 New --> New : le responsable réaffecte\n(nouvelle notification)
 Work --> Closed : le technicien clôture\nl'intervention
@@ -24,8 +34,10 @@ Closed --> [*]
 
 note right of New
   Un seul ticket ouvert par borne :
-  une nouvelle panne ou un nouveau score
-  élevé sur une borne qui a déjà un ticket
-  ouvert ne crée pas de deuxième ticket.
+  une nouvelle panne, un nouveau score élevé
+  ou un nouveau signalement sur une borne
+  qui a déjà un ticket ouvert ne crée pas
+  de deuxième ticket (le signalement est
+  ajouté en commentaire).
 end note
 @enduml
