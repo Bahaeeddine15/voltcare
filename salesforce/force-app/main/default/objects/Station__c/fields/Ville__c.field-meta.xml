@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Ville__c</fullName>
+    <label>Ville</label>
+    <required>true</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Marrakech</fullName>
+                <default>false</default>
+                <label>Marrakech</label>
+            </value>
+            <value>
+                <fullName>Casablanca</fullName>
+                <default>false</default>
+                <label>Casablanca</label>
+            </value>
+            <value>
+                <fullName>Rabat</fullName>
+                <default>false</default>
+                <label>Rabat</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
