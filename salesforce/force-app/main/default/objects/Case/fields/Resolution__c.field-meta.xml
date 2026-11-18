@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Resolution__c</fullName>
+    <description>Résolution du ticket renseignée par le technicien ou le responsable lors de la clôture.</description>
+    <label>Résolution</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Réparé</fullName>
+                <default>false</default>
+                <label>Réparé</label>
+            </value>
+            <value>
+                <fullName>Non reproduit</fullName>
+                <default>false</default>
+                <label>Non reproduit</label>
+            </value>
+            <value>
+                <fullName>Doublon</fullName>
+                <default>false</default>
+                <label>Doublon</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
