@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Station__c</fullName>
+    <description>Relation Master-Detail entre une borne de recharge et sa station.</description>
+    <label>Station</label>
+    <referenceTo>Station__c</referenceTo>
+    <relationshipLabel>Bornes</relationshipLabel>
+    <relationshipName>Bornes</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

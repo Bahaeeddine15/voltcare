@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Statut__c</fullName>
+    <description>Statut actuel de la borne, mis à jour automatiquement à partir des événements OCPP.</description>
+    <label>Statut</label>
+    <required>true</required>
+    <trackHistory>true</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Disponible</fullName>
+                <default>false</default>
+                <label>Disponible</label>
+            </value>
+            <value>
+                <fullName>En charge</fullName>
+                <default>false</default>
+                <label>En charge</label>
+            </value>
+            <value>
+                <fullName>Hors service</fullName>
+                <default>false</default>
+                <label>Hors service</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
