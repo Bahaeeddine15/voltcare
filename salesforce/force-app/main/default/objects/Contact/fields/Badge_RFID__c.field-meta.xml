@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Badge_RFID__c</fullName>
+    <caseSensitive>false</caseSensitive>
+    <description>Identifiant unique du badge RFID du client, utilisé pour associer automatiquement les sessions de recharge à son Contact Salesforce.</description>
+    <externalId>true</externalId>
+    <label>Badge RFID</label>
+    <length>20</length>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <type>Text</type>
+    <unique>true</unique>
+</CustomField>
