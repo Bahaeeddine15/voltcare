@@ -61,36 +61,26 @@ private class SecuriteTest {
         }
     }
 
-    // TODO VC-66 : une fois Session_Recharge__c, Mesure_Borne__c, Integration_Log__c
-    // et Borne_Event__e déployés, remplacer par Schema.sObjectType.XXX direct (sans getGlobalDescribe)
     @IsTest
     static void passerelleNAccedeAAucunObjetMetier() {
         User passerelle = utilisateur('gate');
 
         System.runAs(passerelle) {
-            for (String nom : new List<String>{
-                'Station__c', 'Session_Recharge__c', 'Mesure_Borne__c', 'Case', 'Integration_Log__c'
-            }) {
-                Schema.SObjectType type = Schema.getGlobalDescribe().get(nom);
-                if (type != null) { // l'objet n'existe pas encore dans toutes les orgs
-                    Assert.isFalse(type.getDescribe().isAccessible(), nom + ' ne doit pas être lisible par la passerelle');
-                }
-            }
+            Assert.isFalse(Schema.sObjectType.Station__c.isAccessible(), 'Station__c');
+            Assert.isFalse(Schema.sObjectType.Session_Recharge__c.isAccessible(), 'Session_Recharge__c');
+            Assert.isFalse(Schema.sObjectType.Mesure_Borne__c.isAccessible(), 'Mesure_Borne__c');
+            Assert.isFalse(Schema.sObjectType.Case.isAccessible(), 'Case');
+            Assert.isFalse(Schema.sObjectType.Integration_Log__c.isAccessible(), 'Integration_Log__c');
         }
     }
-    // TODO VC-66 : une fois Session_Recharge__c, Mesure_Borne__c, Integration_Log__c
-    // et Borne_Event__e déployés, remplacer par Schema.sObjectType.XXX direct (sans getGlobalDescribe)
 
     @IsTest
     static void passerellePeutPublierDesEvenements() {
         User passerelle = utilisateur('gate');
-        Schema.SObjectType evenement = Schema.getGlobalDescribe().get('Borne_Event__e');
-        if (evenement == null) {
-            return; // Platform Event pas encore déployé
-        }
 
         System.runAs(passerelle) {
-            Assert.isTrue(evenement.getDescribe().isCreateable(), 'La passerelle doit pouvoir créer des Borne_Event__e');
+            Assert.isTrue(Schema.sObjectType.Borne_Event__e.isCreateable(), 'La passerelle doit pouvoir créer des Borne_Event__e');
         }
     }
 }
+

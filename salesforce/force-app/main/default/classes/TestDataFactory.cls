@@ -94,13 +94,13 @@ public class TestDataFactory {
         );
     }
 
-    // TODO VC-66 : décommenter quand Session_Recharge__c est déployé (branche malika)
-    /*
+   
     public static Session_Recharge__c creerSession(Borne__c borne, Contact client, Integer transactionId) {
         Session_Recharge__c session = new Session_Recharge__c(
             Borne__c = borne.Id,
             Client__c = (client == null) ? null : client.Id,
-            Cle_Session__c = borne.Code_Borne__c + '-' + transactionId,
+            // TODO : renommer en Cle_Session__c quand Malika aura corrigé son champ (dictionnaire v1.3)
+            Cle_de_session__c = borne.Code_Borne__c + '-' + transactionId,
             Transaction_Id__c = transactionId,
             Id_Tag__c = (client == null) ? 'INCONNU' : client.Badge_RFID__c,
             Date_Debut__c = Datetime.now().addHours(-1),
@@ -110,7 +110,7 @@ public class TestDataFactory {
         insert session;
         return session;
     }
-    */
+   
 
     /**
      * Ticket explicitement affecté à proprietaireId.
