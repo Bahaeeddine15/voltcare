@@ -99,8 +99,7 @@ public class TestDataFactory {
         Session_Recharge__c session = new Session_Recharge__c(
             Borne__c = borne.Id,
             Client__c = (client == null) ? null : client.Id,
-            // TODO : renommer en Cle_Session__c quand Malika aura corrigé son champ (dictionnaire v1.3)
-            Cle_de_session__c = borne.Code_Borne__c + '-' + transactionId,
+            Cle_Session__c = borne.Code_Borne__c + '-' + transactionId,
             Transaction_Id__c = transactionId,
             Id_Tag__c = (client == null) ? 'INCONNU' : client.Badge_RFID__c,
             Date_Debut__c = Datetime.now().addHours(-1),
