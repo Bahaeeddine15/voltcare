@@ -132,16 +132,20 @@
     </actionOverrides>
     <actionOverrides>
         <actionName>View</actionName>
+        <content>Station_Record_Page</content>
         <formFactor>Large</formFactor>
-        <type>Default</type>
+        <skipRecordTypeSelect>false</skipRecordTypeSelect>
+        <type>Flexipage</type>
     </actionOverrides>
     <actionOverrides>
         <actionName>View</actionName>
+        <content>Station_Record_Page</content>
         <formFactor>Small</formFactor>
-        <type>Default</type>
+        <skipRecordTypeSelect>false</skipRecordTypeSelect>
+        <type>Flexipage</type>
     </actionOverrides>
     <allowInChatterGroups>false</allowInChatterGroups>
-    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <compactLayoutAssignment>Station_Compact_Layout</compactLayoutAssignment>
     <deploymentStatus>Deployed</deploymentStatus>
     <description>Objet représentant une station de recharge électrique du réseau VoltCare. Une station regroupe plusieurs bornes de recharge et possède un technicien responsable du secteur.</description>
     <enableActivities>false</enableActivities>
