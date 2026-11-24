@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Source__c</fullName>
+    <label>Source</label>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>PASSERELLE</fullName>
+                <default>false</default>
+                <label>PASSERELLE</label>
+            </value>
+            <value>
+                <fullName>API_IA</fullName>
+                <default>false</default>
+                <label>API_IA</label>
+            </value>
+            <value>
+                <fullName>TELEGRAM</fullName>
+                <default>false</default>
+                <label>TELEGRAM</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

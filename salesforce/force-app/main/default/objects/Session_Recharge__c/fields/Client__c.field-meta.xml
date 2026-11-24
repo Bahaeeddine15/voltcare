@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Client__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>Retrouvé par Contact.Badge_RFID__c = Id_Tag__c ; vide si badge inconnu</description>
+    <label>Client</label>
+    <referenceTo>Contact</referenceTo>
+    <relationshipLabel>Sessions Recharge</relationshipLabel>
+    <relationshipName>Sessions_Recharge</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

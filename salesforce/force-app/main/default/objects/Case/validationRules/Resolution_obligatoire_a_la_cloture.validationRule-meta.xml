@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Resolution_obligatoire_a_la_cloture</fullName>
+    <active>true</active>
+    <description>Empêche la clôture d'un ticket si le champ Résolution (Resolution__c) n'a pas été renseigné. Garantit la traçabilité des interventions conformément au dictionnaire de données v1.3 §6.</description>
+    <errorConditionFormula>AND(
+        OR(
+            ISPICKVAL(Status, "Closed"),
+            ISPICKVAL(Status, "Clôturé")
+        ),
+        ISBLANK(TEXT(Resolution__c))
+    )</errorConditionFormula>
+    <errorDisplayField>Resolution__c</errorDisplayField>
+    <errorMessage>La résolution est obligatoire pour clôturer un ticket. Veuillez sélectionner une valeur dans le champ « Résolution » (Réparé, Non reproduit ou Doublon).</errorMessage>
+</ValidationRule>

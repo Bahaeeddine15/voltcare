@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Notifier_Client__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Indique si le client souhaite recevoir des notifications par email concernant l&apos;avancement de son ticket de signalement.</description>
+    <label>Prévenir le client par email</label>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>
