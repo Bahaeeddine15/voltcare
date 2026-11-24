@@ -141,7 +141,7 @@
         <type>Default</type>
     </actionOverrides>
     <allowInChatterGroups>false</allowInChatterGroups>
-    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <compactLayoutAssignment>Borne_Compact_Layout</compactLayoutAssignment>
     <deploymentStatus>Deployed</deploymentStatus>
     <description>Objet représentant une borne de recharge électrique appartenant à une station VoltCare. Il permet de suivre son état, ses caractéristiques techniques et son niveau de risque de panne.</description>
     <enableActivities>false</enableActivities>
