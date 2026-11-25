@@ -14,3 +14,17 @@ __pycache__/
 # Divers
 node_modules/
 .DS_Store
+
+# Virtual environment
+simulator/.venv/
+
+# Environment variables
+simulator/.env
+
+# Mosquitto
+mosquitto/passwd
+mosquitto/data/
+mosquitto/log/
+
+*/__pycache__/
+*/.pyttest_cache/
