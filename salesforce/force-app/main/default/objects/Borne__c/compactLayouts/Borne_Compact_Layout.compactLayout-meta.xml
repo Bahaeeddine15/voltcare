@@ -9,5 +9,6 @@
     <fields>Dernier_Code_Erreur__c</fields>
     <fields>Date_Dernier_Contact__c</fields>
     <fields>Puissance_Max_kW__c</fields>
+    <fields>Code_Borne__c</fields>
     <label>Borne Compact Layout</label>
 </CompactLayout>
