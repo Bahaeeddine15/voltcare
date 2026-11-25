@@ -1,0 +1,5 @@
+ocpp
+websockets
+paho-mqtt
+python-dotenv
+pytest
