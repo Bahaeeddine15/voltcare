@@ -1,6 +1,7 @@
 
 import os
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -29,6 +30,7 @@ class BorneConfig:
     fabricant: str
     modele: str
     puissance_kw: float
+    date_mise_en_service: date
     firmware: str | None = None
 
 
@@ -67,6 +69,22 @@ BORNE_MODELES = (
 VILLES = ("MRK", "CAS", "RBT")
 
 
+def mois_avant(nb_mois: int, reference: date | None = None) -> date:
+    """Date située nb_mois avant reference (jour borné à la fin du mois)."""
+    reference = reference or date.today()
+    total = reference.year * 12 + (reference.month - 1) - nb_mois
+    annee, mois = divmod(total, 12)
+    mois += 1
+    fins = (31, 29 if annee % 4 == 0 and (annee % 100 != 0 or annee % 400 == 0) else 28,
+            31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+    return date(annee, mois, min(reference.day, fins[mois - 1]))
+
+
+def anciennete_mois(numero: int) -> int:
+    """Même ancienneté que donnees-demo.apex : 6 + 4 x numéro (10, 14, 18, 22, 26 mois)."""
+    return 6 + numero * 4
+
+
 def build_bornes() -> list[BorneConfig]:
     bornes = []
 
@@ -79,6 +97,7 @@ def build_bornes() -> list[BorneConfig]:
                 code=f"{ville}-{numero:03d}",
                 ville=ville,
                 station_code=f"ST-{ville}-{station_numero}",
+                date_mise_en_service=mois_avant(anciennete_mois(numero)),
                 **modele,
             )
 
@@ -129,6 +148,9 @@ def validate_configuration() -> None:
         if borne.puissance_kw <= 0:
             raise ValueError(f"Invalid power for {borne.code}.")
 
+        if borne.date_mise_en_service >= date.today():
+            raise ValueError(f"Invalid commissioning date for {borne.code}.")
+
 
 if __name__ == "__main__":
     validate_configuration()
@@ -139,5 +161,6 @@ if __name__ == "__main__":
         print(
             f"{borne.code} | {borne.station_code} | "
             f"{borne.fabricant} | {borne.modele} | "
-            f"{borne.puissance_kw} kW"
+            f"{borne.puissance_kw} kW | "
+            f"en service depuis {borne.date_mise_en_service}"
         )
