@@ -27,4 +27,5 @@ mosquitto/data/
 mosquitto/log/
 
 */__pycache__/
-*/.pyttest_cache/
+.pytest_cache/
+*/.pytest_cache/
