@@ -121,6 +121,28 @@ Attendu : 4 tests `SecuriteTest` en **Pass**.
 
 ---
 
-## 7. Prochaine étape
+## 7. Org de démo (VC-70)
 
-**VC-70** — premier déploiement dans l'org de démo (`voltcare-demo`) + utilisateurs de démo : mêmes étapes 1 à 6 avec `--target-org voltcare-demo`, fait uniquement par l'intégrateur (Bahae).
+Uniquement par l'intégrateur (Bahae). Étapes 1 à 6 avec `--target-org voltcare-demo`, puis :
+
+**Utilisateurs de démo** (Setup → Users → New User, licence Salesforce, profil **VoltCare Interne**)
+
+| Utilisateur | Username | Rôle | Permission set |
+|---|---|---|---|
+| Karim Alaoui | `responsable.voltcare@demo-pfs.ma` | Responsable réseau | `VoltCare_Responsable` |
+| Youssef Idrissi | `technicien.voltcare@demo-pfs.ma` | Technicien | `VoltCare_Technicien` |
+
+```
+sf org assign permset --name VoltCare_Responsable --on-behalf-of responsable.voltcare@demo-pfs.ma --target-org voltcare-demo
+sf org assign permset --name VoltCare_Technicien --on-behalf-of technicien.voltcare@demo-pfs.ma --target-org voltcare-demo
+sf apex run --file scripts/apex/affecter-technicien-demo.apex --target-org voltcare-demo
+```
+Le dernier script rattache les 6 stations au technicien de démo (à relancer après chaque `donnees-demo.apex`).
+
+### Ajouts faits pendant VC-70
+- Profil `VoltCare Interne` : permission **Lightning Experience User** (sinon les utilisateurs arrivent dans Salesforce Classic)
+- `VoltCare_Technicien` / `VoltCare_Responsable` : onglets Station / Borne / Session visibles, lecture sur Session de recharge et sur les champs Station / Borne / Session manquants
+- `VoltCare_Admin` : onglets Station / Borne / Session visibles (les onglets déployés par metadata sont masqués pour l'admin)
+- Vues de liste **« Tous »** sur Station, Borne et Session (les objets créés par metadata n'ont que « Recently Viewed »)
+
+> Après un changement de permissions ou d'onglets : se **déconnecter / reconnecter**, Lightning garde la barre de navigation en cache.
