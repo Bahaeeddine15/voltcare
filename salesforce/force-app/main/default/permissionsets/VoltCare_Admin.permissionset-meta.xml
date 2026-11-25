@@ -213,4 +213,16 @@
     </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>VoltCare Admin</label>
+    <tabSettings>
+        <tab>Borne__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>Session_Recharge__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>Station__c</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
 </PermissionSet>
