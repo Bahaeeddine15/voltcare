@@ -3,3 +3,4 @@ websockets
 paho-mqtt
 python-dotenv
 pytest
+pytest-asyncio
