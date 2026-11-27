@@ -11,18 +11,21 @@ Il centralise les caractéristiques des bornes et les paramètres nécessaires �
 ```text
 simulator/
 ├── config.py
+├── publisher.py
 ├── requirements.txt
 ├── .env
 ├── .env.example
 └── tests/
-    └── test_config.py
+    ├── test_config.py
+    └── test_publisher.py
 ```
 
 - `config.py` : configuration des 15 bornes et paramètres de connexion.
+- `publisher.py` : publication MQTT des six types du contrat v1.0 ; les métadonnées `boot` sont reprises depuis `BORNES` dans `config.py`, et chaque message est copié dans `messages.csv`.
 - `requirements.txt` : dépendances Python nécessaires.
 - `.env` : variables d'environnement privées.
 - `.env.example` : modèle de configuration à copier.
-- `tests/test_config.py` : tests automatisés de la configuration.
+- `tests/` : tests automatisés de la configuration et de la publication.
 
 Le dossier `.venv/` est créé localement par chaque développeur et ne doit pas être versionné.
 
@@ -91,6 +94,7 @@ OCPP_PORT=9000
 Remplacer `VOTRE_MOT_DE_PASSE` par le mot de passe choisi lors de la création du fichier `mosquitto/passwd`.
 
 Les identifiants doivent correspondre à ceux configurés dans Mosquitto.
+`publisher.publier(type, code_borne, donnees)` publie les champs métier dans l'enveloppe v1.0. Pour `boot`, les champs de configuration sont complétés depuis `BORNES` lorsqu'un code connu est utilisé. Le fichier `messages.csv` conserve une ligne par message accepté par le client MQTT ; son emplacement peut être remplacé avec `CSV_LOG_PATH`.
 
 **Important :**
 - Ne jamais partager son fichier `.env` sur Git.
