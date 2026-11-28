@@ -21,6 +21,10 @@ simulator/.venv/
 # Environment variables
 simulator/.env
 
+# Generated CSV history
+simulator/data/
+simulator/messages.csv
+
 # Mosquitto
 mosquitto/passwd
 mosquitto/data/
