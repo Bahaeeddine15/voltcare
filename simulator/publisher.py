@@ -12,6 +12,8 @@ import paho.mqtt.client as mqtt
 
 from config import BORNES, MQTT_HOST, MQTT_PASSWORD, MQTT_PORT, MQTT_USERNAME
 
+from historique import enregistrer
+
 
 LOGGER = logging.getLogger(__name__)
 BASE_DIR = Path(__file__).resolve().parent
@@ -188,6 +190,9 @@ def publier(type: str, code_borne: str, donnees: Mapping[str, Any]) -> dict[str,
         raise RuntimeError(
             f"Échec de publication MQTT sur {topic} (code {result.rc})."
         )
+
+    # Enregistrement dans l'historique structure du simulateur.
+    enregistrer(topic, message)
 
     try:
         _enregistrer_csv(topic, message)
